@@ -8,6 +8,7 @@ import sys
 from copy import deepcopy
 from datetime import datetime
 from time import time
+from typing import List
 
 import cfg
 from commands import admin_commands
@@ -90,6 +91,25 @@ class LoopChecks:
         self._loop = asyncio.get_event_loop()
         self._tick = tick
 
+    async def channel_loop(self):
+        print("Starting TempChannel Loop")
+        while True:
+            for temp_channel in self._client._temp_channels:
+                voice = temp_channel.voice
+                role = temp_channel.role
+                inovker = temp_channel.invoker
+
+                await asyncio.sleep(15.0)
+
+                if len(voice.voice_states) == 0:
+                    await inovker.send("Your private room is empty... I'll clean-up the mess, hope you had a good time. :D", 
+                        delete_after=10.0)
+
+                    await voice.delete()
+                    await role.delete()
+
+            await asyncio.sleep(self._tick)
+
     async def waiting_loop(self):
         print("Starting Waiting Loop")
         while True:
@@ -139,6 +159,7 @@ class LoopChecks:
 
     def start_loops(self):
         self._loop.create_task(self.timer())
+        self._loop.create_task(self.channel_loop())
         self._loop.create_task(self.waiting_loop())
         self._loop.create_task(self.active_loop())
         self._loop.create_task(self.other_loops())
@@ -753,6 +774,7 @@ class MyClient(discord.AutoShardedClient):
 
     def __init__(self, *args, **kwargs):
         super().__init__(intents=intents, *args, **kwargs)
+        self._temp_channels = []
         self.ready_once = False
 
     async def start_chunking(self):
@@ -780,6 +802,7 @@ class MyClient(discord.AutoShardedClient):
             print("Sapphire:", cfg.SAPPHIRE_ID)
         print("discordpy version: {}".format(discord.__version__))
         print('-' * 24)
+        print('Generating TempChannel Cache')
 
         shards = {}
         for g in func.get_guilds(self):
@@ -814,7 +837,6 @@ else:
         heartbeat_timeout=heartbeat_timeout,
         chunk_guilds_at_startup=False,
     )
-
 
 async def reload_modules(m):
     try:

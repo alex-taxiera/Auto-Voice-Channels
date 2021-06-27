@@ -17,6 +17,13 @@ from inspect import currentframe as iframe
 import cfg
 import pytz
 
+class TempChannel:
+    def __init__(self, voice, expires, role, invoker):
+        self.voice = voice
+        self.invoker = invoker
+        self.expires = expires
+        self.role = role
+        pass
 
 def func_timer(threshold=0.5):
     def duration(func):

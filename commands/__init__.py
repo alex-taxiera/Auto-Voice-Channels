@@ -24,6 +24,7 @@ from . import (
     limit,
     listroles,
     logging,
+    pull,
     name,
     nick,
     patreon,
@@ -95,6 +96,8 @@ commands = {
     "uniquenames": uniquenames.command,
     "unlimit": unlimit.command,
     "unlock": unlimit.command,
+    "pull": pull.command,
+    "drag": pull.command,
 }
 
 

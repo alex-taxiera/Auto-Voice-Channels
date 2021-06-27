@@ -20,6 +20,34 @@ try:
 except ImportError:
     patreon_info = None
 
+@utils.func_timer()
+async def create_temp_vc(client, guild, invoker, members, expires=30.0):
+    for channel in guild.channels:
+        if channel.name == f"{invoker.name}'s Temporary Channel":
+            return None, "Already Exists"
+
+    vc = await guild.create_voice_channel(name=f"{invoker.name}'s Temporary Channel")
+    role = await guild.create_role(name=f"{invoker.name}'s Temporary")
+
+    overwrites = vc.overwrites_for(guild.default_role)
+    overwrites.view_channel = False
+    await vc.set_permissions(guild.default_role, overwrite=overwrites)
+    overwrites = vc.overwrites_for(role)
+    overwrites.view_channel = True
+    await vc.set_permissions(role, overwrite=overwrites)
+    invoker_perms = vc.permissions_for(invoker)
+
+    if not invoker_perms.view_channel:
+        invoker.add_roles(role)
+
+    for m in members:
+        await m.add_roles(role)
+
+    temp_channel = utils.TempChannel(vc, expires, role, invoker)
+
+    client._temp_channels.append(temp_channel)
+    
+    return vc
 
 @utils.func_timer()
 def lock_channel_request(channel, offset=0):
