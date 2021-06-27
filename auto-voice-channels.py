@@ -8,6 +8,7 @@ import sys
 from copy import deepcopy
 from datetime import datetime
 from time import time
+from discord.errors import NotFound
 
 import cfg
 from commands import admin_commands
@@ -90,6 +91,32 @@ class LoopChecks:
         self._loop = asyncio.get_event_loop()
         self._tick = tick
 
+    async def channel_loop(self):
+        print("Starting TempChannel Loop")
+        channels = self._client._temp_channels
+        message = 'Your private room is empty, don\'t worry I\'ll clean the after-party!'
+
+        while True:
+            for x in range(0, len(channels)):
+                role = channels[x].role
+                voice = channels[x].voice
+                invoker = channels[x].invoker
+
+                await asyncio.sleep(15.0)
+
+                if len(voice.voice_states) == 0:
+                    try:
+                        await role.delete()
+                        await voice.delete()
+
+                        await invoker.send(message, delete_after=10.0)
+
+                        self._client._temp_channels.pop(x)
+                    except NotFound:
+                        continue
+                    
+            await asyncio.sleep(self._tick)
+
     async def waiting_loop(self):
         print("Starting Waiting Loop")
         while True:
@@ -139,6 +166,7 @@ class LoopChecks:
 
     def start_loops(self):
         self._loop.create_task(self.timer())
+        self._loop.create_task(self.channel_loop())
         self._loop.create_task(self.waiting_loop())
         self._loop.create_task(self.active_loop())
         self._loop.create_task(self.other_loops())
@@ -753,6 +781,7 @@ class MyClient(discord.AutoShardedClient):
 
     def __init__(self, *args, **kwargs):
         super().__init__(intents=intents, *args, **kwargs)
+        self._temp_channels = []
         self.ready_once = False
 
     async def start_chunking(self):
@@ -814,7 +843,6 @@ else:
         heartbeat_timeout=heartbeat_timeout,
         chunk_guilds_at_startup=False,
     )
-
 
 async def reload_modules(m):
     try:
