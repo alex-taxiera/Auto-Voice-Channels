@@ -24,7 +24,7 @@ except ImportError:
 async def create_temp_vc(client, guild, invoker, members, expires=30.0):
     for channel in guild.channels:
         if channel.name == f"{invoker.name}'s Temporary Channel":
-            return None, "Already Exists"
+            return "Already Exists"
 
     vc = await guild.create_voice_channel(name=f"{invoker.name}'s Temporary Channel")
     role = await guild.create_role(name=f"{invoker.name}'s Temporary")

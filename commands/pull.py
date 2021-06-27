@@ -16,7 +16,6 @@ help_text = [
 ]
 
 async def execute(ctx, params):
-    user: User = User
     guild = ctx['guild']
     client = ctx['client']
     author = ctx['message'].author
@@ -37,10 +36,10 @@ async def execute(ctx, params):
 
     vc = await create_temp_vc(client, guild, author, members)
 
-    print(f"{vc}")
-
-    if vc == None:
-        return False, f"Unable to generate a voice channel."
+    if vc == "Already Exists":
+        return False, f"<@!{author.id}>, You already own a private room! BAKA!!!"
+    elif vc == None:
+        return False, f"<@!{author.id}> Unable to generate the voice channel."
 
     await author.send(f'The room is up join here: <#{vc.id}>!', delete_after=15.0)
 
